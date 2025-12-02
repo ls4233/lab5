@@ -31,6 +31,31 @@ int movingAverage(int *buf, int window) {
   return sum / window;
 }
 
+// Convert raw ADC to reflectance
+void to_reflectance(float* R, 
+                    const uint16_t* C_sample, 
+                    const float* C_dark, 
+                    const float* C_ref, 
+                    int N)
+{
+    for (int i = 0; i < N; i++) {
+
+        float sample = (float)C_sample[i];
+        float dark   = C_dark[i];
+        float ref    = C_ref[i];
+
+        float denom = ref - dark;
+        if (fabs(denom) < 1e-9) denom = 1e-9;
+
+        float r = (sample - dark) / denom;
+
+        if (r < 1e-6) r = 1e-6;
+        if (r > 1.0)  r = 1.0;
+
+        R[i] = r;
+    }
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -68,6 +93,20 @@ void loop() {
   int clr = as7341.getChannel(AS7341_CHANNEL_CLEAR);
   int nir = as7341.getChannel(AS7341_CHANNEL_NIR);
 
+  // Print raw values
+  Serial.print("Raw Channels: ");
+  Serial.print("F1=");  Serial.print(f1);
+  Serial.print("  F2="); Serial.print(f2);
+  Serial.print("  F3="); Serial.print(f3);
+  Serial.print("  F4="); Serial.print(f4);
+  Serial.print("  F5="); Serial.print(f5);
+  Serial.print("  F6="); Serial.print(f6);
+  Serial.print("  F7="); Serial.print(f7);
+  Serial.print("  F8="); Serial.print(f8);
+  Serial.print("  CLR="); Serial.print(clr);
+  Serial.print("  NIR="); Serial.print(nir);
+  Serial.println();
+
   // Store into buffers
   f1_buf[idx] = f1;  f2_buf[idx] = f2;  f3_buf[idx] = f3;  f4_buf[idx] = f4;
   f5_buf[idx] = f5;  f6_buf[idx] = f6;  f7_buf[idx] = f7;  f8_buf[idx] = f8;
@@ -97,17 +136,42 @@ void loop() {
   int sNir = movingAverage(nir_buf, window);
 
   // Print smoothed values
-  Serial.print("F1 415nm : "); Serial.println(s1);
-  Serial.print("F2 445nm : "); Serial.println(s2);
-  Serial.print("F3 480nm : "); Serial.println(s3);
-  Serial.print("F4 515nm : "); Serial.println(s4);
-  Serial.print("F5 555nm : "); Serial.println(s5);
-  Serial.print("F6 590nm : "); Serial.println(s6);
-  Serial.print("F7 630nm : "); Serial.println(s7);
-  Serial.print("F8 680nm : "); Serial.println(s8);
-  Serial.print("Clear    : "); Serial.println(sClr);
-  Serial.print("Near IR  : "); Serial.println(sNir);
-  Serial.println();
+  // Serial.print("F1 415nm : "); Serial.println(s1);
+  // Serial.print("F2 445nm : "); Serial.println(s2);
+  // Serial.print("F3 480nm : "); Serial.println(s3);
+  // Serial.print("F4 515nm : "); Serial.println(s4);
+  // Serial.print("F5 555nm : "); Serial.println(s5);
+  // Serial.print("F6 590nm : "); Serial.println(s6);
+  // Serial.print("F7 630nm : "); Serial.println(s7);
+  // Serial.print("F8 680nm : "); Serial.println(s8);
+  // Serial.print("Clear    : "); Serial.println(sClr);
+  // Serial.print("Near IR  : "); Serial.println(sNir);
+  // Serial.println();
+
+
+  // Concat moving average values into C_sample
+  uint16_t C_sample[10] = {
+    (uint16_t)s1,
+    (uint16_t)s2,
+    (uint16_t)s3,
+    (uint16_t)s4,
+    (uint16_t)s5,
+    (uint16_t)s6,
+    (uint16_t)s7,
+    (uint16_t)s8,
+    (uint16_t)sClr,
+    (uint16_t)sNir
+  };
+
+  // Convert to reflectance
+  float R[10];
+  to_reflectance(R, C_sample, C_dark, C_ref, 10);
+  Serial.print("Reflectance: ");
+  for (int i = 0; i < 10; i++) {
+      Serial.print(R[i], 6);   // print with 6 decimal places
+      Serial.print(i < 9 ? ", " : "\n");
+  }
+  delay(1000);
 
   // // Print out the stored values for each channel
   // Serial.print("F1 415nm : ");
