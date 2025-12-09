@@ -48,10 +48,6 @@ void to_reflectance(float* R,
         if (fabs(denom) < 1e-9) denom = 1e-9;
 
         float r = (sample - dark) / denom;
-
-        if (r < 1e-6) r = 1e-6;
-        if (r > 1.0)  r = 1.0;
-
         R[i] = r;
     }
 }
@@ -135,18 +131,17 @@ void loop() {
   int sClr = movingAverage(clear_buf, window);
   int sNir = movingAverage(nir_buf, window);
 
-  // Print smoothed values
-  // Serial.print("F1 415nm : "); Serial.println(s1);
-  // Serial.print("F2 445nm : "); Serial.println(s2);
-  // Serial.print("F3 480nm : "); Serial.println(s3);
-  // Serial.print("F4 515nm : "); Serial.println(s4);
-  // Serial.print("F5 555nm : "); Serial.println(s5);
-  // Serial.print("F6 590nm : "); Serial.println(s6);
-  // Serial.print("F7 630nm : "); Serial.println(s7);
-  // Serial.print("F8 680nm : "); Serial.println(s8);
-  // Serial.print("Clear    : "); Serial.println(sClr);
-  // Serial.print("Near IR  : "); Serial.println(sNir);
-  // Serial.println();
+  Serial.print("F1 415nm : "); Serial.println(s1);
+  Serial.print("F2 445nm : "); Serial.println(s2);
+  Serial.print("F3 480nm : "); Serial.println(s3);
+  Serial.print("F4 515nm : "); Serial.println(s4);
+  Serial.print("F5 555nm : "); Serial.println(s5);
+  Serial.print("F6 590nm : "); Serial.println(s6);
+  Serial.print("F7 630nm : "); Serial.println(s7);
+  Serial.print("F8 680nm : "); Serial.println(s8);
+  Serial.print("Clear    : "); Serial.println(sClr);
+  Serial.print("Near IR  : "); Serial.println(sNir);
+  Serial.println();
 
 
   // Concat moving average values into C_sample
